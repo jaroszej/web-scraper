@@ -1,0 +1,25 @@
+
+class Authorization():
+    
+    def __init__(self):
+        self.consumer_token = "consumer_token"
+        self.consumer_secret = "consumer_secret"
+        self.access_token = "access_token"
+        self.access_token_secret = "access_token_secret"
+
+#############################################################
+#
+# INSTRUCTIONS 
+# http://docs.tweepy.org/en/latest/getting_started.html
+#
+# 1 get consumer keys and access/authentication tokens from Twitter dev portal: https://developer.twitter.com/en
+#
+# 2 paste each key in the quotes of the corresponding __init__ items
+# example: 
+#   def __init__(self):
+#       self.consumer_token = "123456789ABCDEF"
+#
+# 3 rename this file "auth.py" 
+#
+# 4 save
+#
