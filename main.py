@@ -19,6 +19,7 @@ auth.set_access_token(authKeys.access_token, authKeys.access_token_secret)
 
 api = tweepy.API(auth)
 
+# twitter allows 280 characters in a tweet
 TWITTER_CHARS = 280
 
 def splitChars(word):
@@ -52,18 +53,18 @@ permLink = str(driver.current_url)
 TWITTER_CHARS = TWITTER_CHARS - len(permLink)
 print(str(TWITTER_CHARS) + " available characters to tweet with\n")
 
-# wiki article with space left for tweet
-articleListSmaller = articleList[:(TWITTER_CHARS)]
+# wiki article with char buffer for space left for tweet
+articleListSmaller = articleList[:(TWITTER_CHARS - 33)]
 articleStr = ''.join(articleList)
 elipse = "..."
 wikiArticle = articleStr + elipse
-readMore = "Read more: "
+readMore = "Read more:"
 
 driver.quit()
 
 # formats tweet
 with open('temptweet.txt', 'w', encoding="utf-8") as f:
-    f.write(wikiHeading + '\n\nFrom Wikipedia . . .\n\n' + wikiArticle + '\n' + readMore + '\n' + permLink)
+    f.write(wikiHeading + '\n\nFrom Wikipedia...\n\n' + wikiArticle + '\n' + readMore + '\n' + permLink)
 
 # sends tweet
 with open('temptweet.txt', 'r') as f:
