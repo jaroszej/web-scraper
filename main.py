@@ -1,5 +1,6 @@
 # python imports 
 import time
+import schedule
 
 # selenium imports
 from selenium import webdriver
@@ -12,62 +13,72 @@ from selenium.webdriver.common.keys import Keys
 import tweepy
 from auth import Authorization
 
-authKeys = Authorization()
-
-auth = tweepy.OAuthHandler(authKeys.consumer_token, authKeys.consumer_secret)
-auth.set_access_token(authKeys.access_token, authKeys.access_token_secret)
-
-api = tweepy.API(auth)
-
-# twitter allows 280 characters in a tweet
-TWITTER_CHARS = 280
-
 def splitChars(word):
     return list(word)
 
-PATH = "C:\Program Files (x86)\chromedriver_win32\chromedriver.exe"
-driver = webdriver.Chrome(PATH)
+def scrapeWiki():
+    authKeys = Authorization()
 
-# wikipedia main page
-driver.get("https://en.wikipedia.org/wiki/Main_Page")
-wikiTitle = str(driver.title)
+    auth = tweepy.OAuthHandler(authKeys.consumer_token, authKeys.consumer_secret)
+    auth.set_access_token(authKeys.access_token, authKeys.access_token_secret)
 
-# find Random article list item
-# return article title
-randomArticle = driver.find_element_by_link_text("Random article")
-randomArticle.send_keys(Keys.RETURN)
-firstHeading = driver.find_element_by_id("firstHeading")
-# deduct # of chars from wiki title from # of available chars to tweet
-wikiHeading = str(firstHeading.text)
-TWITTER_CHARS = TWITTER_CHARS - len(wikiHeading)
-print(wikiHeading + "\n")
+    api = tweepy.API(auth)
 
-# find first paragraph
-mwParserOutput = driver.find_element_by_class_name("mw-parser-output")
-pTag = driver.find_element_by_tag_name("p")
-articleContent = str(pTag.text)
-articleList = splitChars(articleContent)
+    # twitter allows 280 characters in a tweet, 40 reserved for buffer
+    TWITTER_CHARS = 240
 
-# wiki link & deduct length of link from # of available chars to tweet
-permLink = str(driver.current_url)
-TWITTER_CHARS = TWITTER_CHARS - len(permLink)
-print(str(TWITTER_CHARS) + " available characters to tweet with\n")
+    PATH = "C:\Program Files (x86)\chromedriver_win32\chromedriver.exe"
+    driver = webdriver.Chrome(PATH)
 
-# wiki article with char buffer for space left for tweet
-articleListSmaller = articleList[:(TWITTER_CHARS - 33)]
-articleStr = ''.join(articleList)
-elipse = "..."
-wikiArticle = articleStr + elipse
-readMore = "Read more:"
+    # wikipedia main page
+    driver.get("https://en.wikipedia.org/wiki/Main_Page")
+    wikiTitle = str(driver.title)
 
-driver.quit()
+    # find Random article list item
+    # return article title
+    randomArticle = driver.find_element_by_link_text("Random article")
+    randomArticle.send_keys(Keys.RETURN)
+    firstHeading = driver.find_element_by_id("firstHeading")
+    # deduct # of chars from wiki title from # of available chars to tweet
+    wikiHeading = str(firstHeading.text)
+    TWITTER_CHARS = (TWITTER_CHARS - len(wikiHeading))
+    print(wikiHeading + "\n")
 
-# formats tweet
-with open('temptweet.txt', 'w', encoding="utf-8") as f:
-    f.write(wikiHeading + '\n\nFrom Wikipedia...\n\n' + wikiArticle + '\n' + readMore + '\n' + permLink)
+    # find first paragraph
+    mwParserOutput = driver.find_element_by_class_name("mw-parser-output")
+    pTag = driver.find_element_by_tag_name("p")
+    articleContent = str(pTag.text)
+    articleList = splitChars(articleContent)
 
-# sends tweet
-with open('temptweet.txt', 'r') as f:
-    api.update_status(f.read())
+    # wiki link & deduct length of link from # of available chars to tweet
+    permLink = str(driver.current_url)
+    TWITTER_CHARS = TWITTER_CHARS - len(permLink)
+    print(str(TWITTER_CHARS) + " available characters to tweet with\n")
 
-print("Sent " + wikiHeading + " Wikipedia article as a tweet. . .")
+    # wiki article
+    articleListSmaller = articleList[:(TWITTER_CHARS)]
+    articleStr = ''.join(articleListSmaller)
+    elipse = "..."
+    wikiArticle = articleStr + elipse
+    readMore = "Read more:"
+
+    driver.quit()
+
+    # formats tweet
+    with open('temptweet.txt', 'w', encoding="utf-8") as f:
+        f.write(wikiHeading + '\n\n' + wikiArticle + '\n' + readMore + '\n' + permLink)
+
+    print(f.read)
+
+    # sends tweet
+    with open('temptweet.txt', 'r') as f:
+        api.update_status(f.read())
+
+    print("Sent " + wikiHeading + " Wikipedia article as a tweet. . .")
+
+# send a tweet every 4 hours
+schedule.every(4).hours.do(scrapeWiki)
+
+while True:
+    schedule.run_pending()
+    time.sleep(1)
